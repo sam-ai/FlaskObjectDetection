@@ -14,10 +14,10 @@ from io import BytesIO
 sys.path.append("..")
 from utils import label_map_util
 from utils import visualization_utils as vis_util
-MODEL_NAME = '08_frozen_model'
+MODEL_NAME = 'frozen_bol_ADDRESS'
 PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('data', 'cws_label.pbtxt')
-NUM_CLASSES = 4
+NUM_CLASSES = 1
 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
@@ -70,7 +70,7 @@ def crop_img_to_bytes(image_np,
   for i in range(min(20, boxes.shape[0])):
     if scores is None or scores[0][i] > min_score_thresh:
       box = tuple(boxes[0][i].tolist())
-      i_class = class_mappining[img_class[0][i]]
+      i_class = class_mappining[img_class[0][i]] + "_" + str(i)
       ymin, xmin, ymax, xmax = box
       (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                   ymin * im_height, ymax * im_height)
@@ -114,9 +114,9 @@ def detection():
     image_np_expanded = np.expand_dims(image_np, axis=0)
     # x_input = np.expand_dims(img_data, axis=0) # add an extra dimention.
 
-#     result = {
-#         'data': "Done !"
-#     }
+    result = {
+        'data': "Done !"
+    }
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -128,9 +128,9 @@ def detection():
           (boxes, scores, classes, num_detections) = sess.run(
                       [boxes, scores, classes, num_detections],
                       feed_dict={image_tensor: image_np_expanded})
-#           print("scores -> {}".format(scores))
-#           print("classes -> {}".format(classes))
-#           print("boxes -> {}".format(boxes))
+          # print("scores -> {}".format(scores))
+          # print("classes -> {}".format(classes))
+          # print("boxes -> {}".format(boxes))
     
           # vis_util.visualize_boxes_and_labels_on_image_array(
           #             image_np,
