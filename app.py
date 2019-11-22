@@ -62,18 +62,15 @@ def crop_img_to_bytes(image_np,
                       min_score_thresh=.5):
   
   class_mappining = {
-    1 : 'TABLE',
-    2 : 'SIGNATURE',
-    3 : 'TO_ADDRESS',
-    4 : 'FROM_ADDRESS'
+    1 : 'ADDRESS'
   }
   
   crop_images = {}
   
   for i in range(min(20, boxes.shape[0])):
-    if scores is None or scores[i] > min_score_thresh:
-      box = tuple(boxes[i].tolist())
-      i_class = class_mappining[img_class[i]]
+    if scores is None or scores[0][i] > min_score_thresh:
+      box = tuple(boxes[0][i].tolist())
+      i_class = class_mappining[img_class[0][i]]
       ymin, xmin, ymax, xmax = box
       (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                   ymin * im_height, ymax * im_height)
@@ -83,7 +80,7 @@ def crop_img_to_bytes(image_np,
       imgByteArr = BytesIO()
       img.save(imgByteArr, format='PNG')
       imgByteArr = imgByteArr.getvalue()
-      crop_images[i_class] = imgByteArr
+      crop_images[i_class] = base64.b64encode(imgByteArr).decode('utf-8')
 
   return crop_images
 
@@ -113,12 +110,13 @@ def detection():
     # Load in an image to object detect and preprocess it
     img_data = getI420FromBase64(request.data)
     image_np, shape = load_image_into_numpy_array(img_data)
+    print(shape)
     image_np_expanded = np.expand_dims(image_np, axis=0)
     # x_input = np.expand_dims(img_data, axis=0) # add an extra dimention.
 
-    result = {
-        'data': "Done !"
-    }
+#     result = {
+#         'data': "Done !"
+#     }
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -130,6 +128,9 @@ def detection():
           (boxes, scores, classes, num_detections) = sess.run(
                       [boxes, scores, classes, num_detections],
                       feed_dict={image_tensor: image_np_expanded})
+#           print("scores -> {}".format(scores))
+#           print("classes -> {}".format(classes))
+#           print("boxes -> {}".format(boxes))
     
           # vis_util.visualize_boxes_and_labels_on_image_array(
           #             image_np,
@@ -139,14 +140,14 @@ def detection():
           #             category_index,
           #             use_normalized_coordinates=True,
           #             line_thickness=3)
+          # crop_img_to_bytes(image_np, output_dict['detection_boxes'],
+          #         output_dict['detection_scores'], output_dict['detection_classes'], 1692, 2200)
           data = crop_img_to_bytes(image_np,
                                    boxes,
                                    scores,
                                    classes,
                                    shape[0],
                                    shape[1])
-
-          print(scores)
     # im = Image.fromarray(image_np)
 
     return jsonify(data)
