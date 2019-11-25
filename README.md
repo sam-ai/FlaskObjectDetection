@@ -12,7 +12,8 @@
 
 
 ## API USAGE:
-'''python
+
+```python
 url = 'https://<api url host>/detection'
 img_path = "/<path to image>/R1178.png"
   
@@ -23,11 +24,11 @@ encoded = b'data:image/png;base64,' + base64.b64encode(open(img_path, "rb").read
 res_out = requests.post(url, data = encoded)
 crop_img = res_out.json()
 crop_img['data']
-'''
+```
 
 ## Response:
 
-'''
+```
 {
   "data": [
     {
@@ -53,6 +54,6 @@ crop_img['data']
   ],
   "title": "address_predictor"
 }
-'''
+```
 
 
