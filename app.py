@@ -1,3 +1,4 @@
+%%writefile /content/FlaskObjectDetection/app.py
 import os
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify
 from werkzeug import secure_filename
@@ -53,6 +54,7 @@ def load_image_into_numpy_array(image):
   return reshaped.astype(np.uint8), (im_width, im_height)
 
 
+
 def crop_img_to_bytes(image_np, 
                       boxes, 
                       scores,
@@ -65,12 +67,24 @@ def crop_img_to_bytes(image_np,
     1 : 'ADDRESS'
   }
   
-  crop_images = {}
+  crop_images = {
+      "title": "address_predictor",
+      "data": []
+  }
   
-  for i in range(min(20, boxes.shape[0])):
-    if scores is None or scores[0][i] > min_score_thresh:
+  bounding_data = []
+  for i in range(min(20, boxes.shape[1])):
+    # print("scores -> {}".format(scores[0][i]))
+    # print("boxes shape -> {}".format(boxes.shape))
+    # print("boxes -> {}".format(boxes))
+    json_data = {}
+    json_data['label'] = "ADDRESS"
+    json_data['base64png'] = None
+    json_data['bounding_box'] = []
+    # if scores is None or scores[0][i] > min_score_thresh:
+    if scores[0][i] > min_score_thresh:
       box = tuple(boxes[0][i].tolist())
-      i_class = class_mappining[img_class[0][i]] + "_" + str(i)
+      # i_class = class_mappining[img_class[0][i]] + "_" + str(i)
       ymin, xmin, ymax, xmax = box
       (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                   ymin * im_height, ymax * im_height)
@@ -80,7 +94,12 @@ def crop_img_to_bytes(image_np,
       imgByteArr = BytesIO()
       img.save(imgByteArr, format='PNG')
       imgByteArr = imgByteArr.getvalue()
-      crop_images[i_class] = base64.b64encode(imgByteArr).decode('utf-8')
+      json_data['base64png'] = base64.b64encode(imgByteArr).decode('utf-8')
+      json_data['bounding_box'] = [int(left) , int(right) , int(top) ,int(bottom)]
+      # crop_images[i_class] = base64.b64encode(imgByteArr).decode('utf-8')
+      bounding_data.append(json_data)
+
+  crop_images['data'] = bounding_data
 
   return crop_images
 
@@ -114,9 +133,9 @@ def detection():
     image_np_expanded = np.expand_dims(image_np, axis=0)
     # x_input = np.expand_dims(img_data, axis=0) # add an extra dimention.
 
-    result = {
-        'data': "Done !"
-    }
+    # result = {
+    #     'data': "Done !"
+    # }
 
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
