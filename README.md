@@ -4,11 +4,14 @@
 
 ## Using:
 
+```
 - git clone
 - save frozen model(other files also) in FlaskObjectDetection/frozen_bol_ADDRESS folder
 - cd FlaskObjectDetection
 - pip install -r requirements.txt
 - python app.y
+
+```
 
 
 ## API USAGE:
@@ -54,6 +57,49 @@ crop_img['data']
   ],
   "title": "address_predictor"
 }
+```
+
+## API CLIENT:
+
+get cropped images
+
+```
+
+def get_cropped_address(img_path):
+  base_url = 'https://5bc01aed.ngrok.io/detection'
+  encoded = b'data:image/png;base64,' + \
+            base64.b64encode(open(img_path, "rb").read())
+  res_out = requests.post(base_url, data = encoded)
+  crop_img = res_out.json()['data']
+  
+  return [
+          Image.open(BytesIO(base64.b64decode(img['base64png']))) 
+          for img in crop_img
+         ]
+         
+```
+
+get ocr text
+
+```
+
+def get_text_ocr(data):
+  import pytesseract
+  for im in data:
+    im = im.convert('L')
+    text = pytesseract.image_to_string(im)
+    print(text)
+    print("=="*10)
+
+```
+
+test
+
+```
+
+data = get_cropped_address(img_path)
+get_text_ocr(data)
+
 ```
 
 
