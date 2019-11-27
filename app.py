@@ -1,4 +1,4 @@
-import os
+# import os
 from flask import Flask, \
     render_template, \
     request, redirect, \
@@ -24,7 +24,6 @@ sys.path.append("..")
 
 # from utils import visualization_utils as vis_util
 # create folder with name 'frozen_bol_ADDRESS' nd store frozen
-
 MODEL_NAME = 'frozen_bol_ADDRESS'
 PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('data', 'cws_label.pbtxt')
@@ -45,7 +44,7 @@ categories = label_map_util.convert_label_map_to_categories(
 category_index = label_map_util.create_category_index(categories)
 
 
-def getI420FromBase64(
+def get_img_from_base64(
         codec
 ):
 
@@ -159,7 +158,7 @@ def index():
 def detection():
     request.get_data()
     # Load in an image to object detect and preprocess it
-    img_data = getI420FromBase64(request.data)
+    img_data = get_img_from_base64(request.data)
     image_np, shape = load_image_into_numpy_array(img_data)
     print(shape)
     image_np_expanded = np.expand_dims(image_np, axis=0)
